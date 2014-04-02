@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<!--
+cntsoftware.com
+-->
+<html>
+    <head>
+        <title>Match Stats</title>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="stylesheet" href="lib/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="lib/css/main.css" />
+        <style>
+            #side {
+                float:left;
+                width: 33%;
+            }
+            #center {
+                float:left;
+                width: 34%;
+            }
+            button {
+                float:left;
+                width: 95%;
+                height: 65px;
+            }
+        </style>
+        <script>
+            var stats = {
+                match_id: 0,
+                team_id: 0,
+                auto_move: 0,
+                auto_high_not: 0,
+                auto_high_hot: 0,
+                auto_low_not: 0,
+                auto_low_hot: 0,
+                pass_start: 0,
+                pass_end: 0,
+                truss_pass: 0,
+                defense: 0,
+                penalty: 0,
+                low_goal: 0,
+                high_goal: 0
+            };
+
+            var log = new Array();
+
+            function increase(statName) {
+                //TODO: it should be possible to derive the statName from the
+                // name of the object that called this function (i.e. the button)
+                // statName = (buttonName - "_btn")
+                var badgeName = statName + "_badge"
+                var buttonName = statName + "_btn"
+
+                var oldStatVal = stats[statName]
+
+                var badge = document.getElementById(badgeName);
+                if (!(badge === null)) {
+                    //var oldScore = parseInt(badge.innerHTML)
+                    badge.innerHTML = oldStatVal + 1;
+                }
+
+                stats[statName] = oldStatVal + 1;
+
+                if (oldStatVal == 0) {
+                    var button = document.getElementById(buttonName)
+                    //badge.setAttribute("class","badge badge-success")
+                    button.style.color = 'green'
+                }
+
+                log.push(statName);
+            }
+
+            function undo() {
+                if (log.length !== 0) {
+                    var last_action = log.pop();
+                    decrease(last_action);
+                }
+            }
+
+            function decrease(statName) {
+                //TODO: it should be possible to derive the statName from the
+                // name of the object that called this function (i.e. the button)
+                // statName = (buttonName - "_btn")
+                var badgeName = statName + "_badge"
+                var buttonName = statName + "_btn"
+
+                var oldStatVal = stats[statName]
+                var newStatVal = oldStatVal - 1;
+
+                var badge = document.getElementById(badgeName);
+                if (!(badge === null)) {
+                    //var oldScore = parseInt(badge.innerHTML)
+                    badge.innerHTML = newStatVal;
+                }
+
+                stats[statName] = newStatVal;
+
+                if (newStatVal == 0) {
+                    var button = document.getElementById(buttonName)
+                    button.style.color = 'black'
+                }
+            }
+
+            function resetField(statName) {
+                //TODO: it should be possible to derive the statName from the
+                // name of the object that called this function (i.e. the button)
+                // statName = (buttonName - "_btn")
+                var badgeName = statName + "_badge"
+                var buttonName = statName + "_btn"
+
+                stats[statName] = 0
+
+                var badge = document.getElementById(badgeName)
+                if (!(badge === null)) {
+                    badge.innerHTML = 0;
+                }
+
+                var button = document.getElementById(buttonName)
+                if (!(button === null)) {
+                    button.style.color = 'black'
+                }
+            }
+
+            function saveAndReset() {
+                stats.match_id = document.getElementById("match_id").value;
+                stats.team_id = document.getElementById("team_id").value;
+                save();
+                for (var statName in stats) {
+                    if (typeof (stats[statName]) !== "undefined") {
+                        resetField(statName);
+                    }
+                }
+                stats.match_id = 0;
+                stats.team_id = 0;
+                document.getElementById("match_id").value = '';
+                document.getElementById("team_id").value = '';
+            }
+
+            function buildParams() {
+                var params = '';
+
+                for (var statName in stats) {
+                    params = params + statName + "=" + stats[statName] + '&';
+                }
+
+                params = params.substring(0, params.length);
+                return params;
+            }
+
+            function save() {
+                params = buildParams()
+                request = new ajaxRequest()
+                request.open("POST", "savestats.php", true)
+                request.setRequestHeader("Content-type", "application/x-www-form-urlencoded")
+//                request.setRequestHeader("Content-length", params.length)
+//                request.setRequestHeader("Connection", "close")
+
+                request.onreadystatechange = function()
+                {
+                    if (this.readyState == 4)
+                    {
+                        if (this.status == 200)
+                        {
+                            if (this.responseText != null)
+                            {
+                                document.getElementById('info').innerHTML =
+                                        this.responseText
+                            }
+                            else
+                                alert("Ajax error: No data received")
+                        }
+                        else
+                            alert("Ajax error: " + this.statusText)
+                    }
+                }
+
+                request.send(params)
+            }
+
+            function ajaxRequest()
+            {
+                try
+                {
+                    var request = new XMLHttpRequest()
+                }
+                catch (e1)
+                {
+                    try
+                    {
+                        request = new ActiveXObject("Msxml2.XMLHTTP")
+                    }
+                    catch (e2)
+                    {
+                        try
+                        {
+                            request = new ActiveXObject("Microsoft.XMLHTTP")
+                        }
+                        catch (e3)
+                        {
+                            request = false
+                        }
+                    }
+                }
+                return request
+            }
+
+        </script>
+    </head>
+    <body>
+        <div id="container">
+            <!-- Nav tabs -->
+            <ul class="nav nav-tabs" id="myTab">
+                <li class="active"><a href="#match" data-toggle="tab">Match</a></li>
+                <li><a href="#auto" data-toggle="tab">Auto</a></li>
+                <li><a href="#tele" data-toggle="tab">Tele Op</a></li>
+                <li><a href="#save" data-toggle="tab">Save</a><li>
+            </ul>
+
+            <!-- Tab panes -->
+            <div class="tab-content">
+                <div class="tab-pane active" id="match">
+                    <div id="side">
+                        <input id="match_id" type="number" class="form-control" placeholder="Match #">
+                        <input id="team_id" type="number" class="form-control" placeholder="Team #">
+                    </div>
+                </div>
+                <div class="tab-pane" id="auto">
+                    <div id="side">
+                        <button type="button" id="auto_move_btn" class="btn btn-default btn-lg btn-block" onclick="increase('auto_move')">
+                            Advance 
+                        </button>
+                    </div>
+                    <div id="center">
+                        <button type="button" id="auto_high_not_btn" class="btn btn-default btn-lg btn-block" onclick="increase('auto_high_not')">
+                            High Goal<br>Cold 
+                        </button>
+                        <button type="button" id="auto_low_not_btn" class="btn btn-default btn-lg btn-block" onclick="increase('auto_low_not')">
+                            Low Goal<br>Cold
+                        </button>
+                    </div>
+                    <div id="side">
+                        <button type="button" id="auto_high_hot_btn" class="btn btn-default btn-lg btn-block" onclick="increase('auto_high_hot')">
+                            High Goal<br>Hot
+                        </button>
+                        <button type="button" id="auto_low_hot_btn" class="btn btn-default btn-lg btn-block" onclick="increase('auto_low_hot')">
+                            Low Goal<br>Hot
+                        </button>
+                        <button type="button" id="undo_auto" class="btn btn-danger btn-lg btn-block" onclick="undo()">
+                            Undo
+                        </button>
+                    </div>
+                </div>
+                <div class="tab-pane" id="tele">
+                    <div id="side">
+                        <button type="button" id="pass_start_btn" class="btn btn-default btn-lg btn-block" onclick="increase('pass_start')">
+                            Start<br>Pass 
+                            <span id="pass_start_badge" class="badge">0</span>
+                        </button> 
+                        <button type="button" id="pass_end_btn" class="btn btn-default btn-lg btn-block" onclick="increase('pass_end')">
+                            Receive<br>Pass 
+                            <span id="pass_end_badge" class="badge">0</span>
+                        </button>
+                        <button type="button" id="truss_pass_btn" class="btn btn-default btn-lg btn-block" onclick="increase('truss_pass')">
+                            Truss<br>Pass 
+                            <span id="truss_pass_badge" class="badge">0</span>
+                        </button>
+                    </div>
+                    <div id="center">
+                        <button type="button" id="defense_btn" class="btn btn-default btn-lg btn-block" onclick="increase('defense')">
+                            Defense
+                            <span id="defense_badge" class="badge">0</span>
+                        </button>
+                        <button type="button" id="penalty_btn" class="btn btn-default btn-lg btn-block" onclick="increase('penalty')">
+                            Penalty
+                            <span id="penalty_badge" class="badge">0</span>
+                        </button>
+                    </div>
+                    <div id="side">
+                        <button type="button" id="high_goal_btn" class="btn btn-default btn-lg btn-block" onclick="increase('high_goal')">
+                            High<br>Goal
+                            <span id="high_goal_badge" class="badge">0</span>
+                        </button>
+                        <button type="button" id="low_goal_btn" class="btn btn-default btn-lg btn-block" onclick="increase('low_goal')">
+                            Low<br>Goal
+                            <span id="low_goal_badge" class="badge">0</span>
+                        </button>
+                        <button type="button" id="undo_tele" class="btn btn-danger btn-lg btn-block" onclick="undo()">
+                            Undo
+                        </button>
+                    </div>
+                </div>
+                <div class="tab-pane" id="save">
+                    <div id="center">
+                        <!--button id="save_btn" onclick="saveAndReset()">Save</button-->
+                        <button type="button" id="save_btn" class="btn btn-default btn-lg btn-block" onclick="saveAndReset()">
+                            Save
+                        </button>
+                        <hr>
+                        <div id="info" class="panel panel-default"></div>                                               
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="lib/js/jquery-1.10.1.js"></script>
+        <script src="lib/js/bootstrap.min.js"></script>
+    </body>
+</html>
