@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<!--
+cntsoftware.com
+-->
+<html>
+    <head>
+        <title>Match Stats</title>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="stylesheet" href="lib/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="lib/css/main.css" />
+        <style>
+            #side {
+                float:left;
+                width: 33%;
+            }
+            #center {
+                float:left;
+                width: 34%;
+            }
+            button {
+                float:left;
+                width: 95%;
+                height: 65px;
+            }
+        </style>
+        <script>
+            var stats = {
+                match_id: 0,
+                team_id: 0,
+                auto_move: 0,
+                auto_high: 0,
+                auto_low: 0,
+                pass_start: 0,
+                pass_end: 0,
+                truss: 0,
+                defense: 0,
+                penalty: 0,
+                low_goal: 0,
+                high_goal: 0
+            }
+
+            function increase(statName) {
+                //TODO: it should be possible to derive the statName from the
+                // name of the object that called this function (i.e. the button)
+                // statName = (buttonName - "_btn")
+                var badgeName = statName + "_badge"
+                var buttonName = statName + "_btn"
+
+                var oldStatVal = stats[statName]
+
+                var badge = document.getElementById(badgeName);
+                if (!(badge === null)) {
+                    //var oldScore = parseInt(badge.innerHTML)
+                    badge.innerHTML = oldStatVal + 1;
+                }
+
+                stats[statName] = oldStatVal + 1;
+
+                if (oldStatVal == 0) {
+                    var button = document.getElementById(buttonName)
+                    //badge.setAttribute("class","badge badge-success")
+                    button.style.color = 'green'
+                }
+            }
+
+            function resetField(statName) {
+                //TODO: it should be possible to derive the statName from the
+                // name of the object that called this function (i.e. the button)
+                // statName = (buttonName - "_btn")
+                var badgeName = statName + "_badge"
+                var buttonName = statName + "_btn"
+
+                stats[statName] = 0
+
+                var badge = document.getElementById(badgeName)
+                if (!(badge === null)) {
+                    badge.innerHTML = 0;
+                }
+
+                var button = document.getElementById(buttonName)
+                if (!(button === null)) {
+                    button.style.color = 'black'
+                }
+            }
+
+            function saveAndReset() {
+                stats.match_id = document.getElementById("match_id").value;
+                stats.team_id = document.getElementById("team_id").value;
+                save()
+                for (var statName in stats) {
+                    if (typeof (stats[statName]) != "undefined") {
+                        resetField(statName)
+                    }
+                }
+                stats.match_id = 0
+                stats.team_id = 0
+                document.getElementById("match_id").value = ''
+                document.getElementById("team_id").value = ''
+            }
+
+            function buildParams() {
+                var params = '';
+
+                for (var statName in stats) {
+                    params = params + statName + "=" + stats[statName] + '&';
+                }
+
+                params = params.substring(0, params.length);
+                return params;
+            }
+
+            function save() {
+                params = buildParams()
+                request = new ajaxRequest()
+                request.open("POST", "savestats.php", true)
+                request.setRequestHeader("Content-type", "application/x-www-form-urlencoded")
+//                request.setRequestHeader("Content-length", params.length)
+//                request.setRequestHeader("Connection", "close")
+
+                request.onreadystatechange = function()
+                {
+                    if (this.readyState == 4)
+                    {
+                        if (this.status == 200)
+                        {
+                            if (this.responseText != null)
+                            {
+                                document.getElementById('info').innerHTML =
+                                        this.responseText
+                            }
+                            else
+                                alert("Ajax error: No data received")
+                        }
+                        else
+                            alert("Ajax error: " + this.statusText)
+                    }
+                }
+
+                request.send(params)
+            }
+
+            function ajaxRequest()
+            {
+                try
+                {
+                    var request = new XMLHttpRequest()
+                }
+                catch (e1)
+                {
+                    try
+                    {
+                        request = new ActiveXObject("Msxml2.XMLHTTP")
+                    }
+                    catch (e2)
+                    {
+                        try
+                        {
+                            request = new ActiveXObject("Microsoft.XMLHTTP")
+                        }
+                        catch (e3)
+                        {
+                            request = false
+                        }
+                    }
+                }
+                return request
+            }
+
+        </script>
+    </head>
+    <body>
+        <div id="container">
+            <!-- Nav tabs -->
+            <ul class="nav nav-tabs" id="myTab">
+                <li class="active"><a href="#match" data-toggle="tab">Match</a></li>
+                <li><a href="#auto" data-toggle="tab">Auto</a></li>
+                <li><a href="#tele" data-toggle="tab">Tele Op</a></li>
+            </ul>
+
+            <!-- Tab panes -->
+            <div class="tab-content">
+                <div class="tab-pane active" id="match">
+                    <div id="side">
+                        <input id="match_id" type="number" class="form-control" placeholder="Match #">
+                        <input id="team_id" type="number" class="form-control" placeholder="Team #">
+                    </div>
+                    <div id="center">
+                        <button id="save_btn" onclick="saveAndReset()">Save</button>
+                    </div>
+                    <div id="side">
+                        <div id='info' class="alert alert-danger"></div>                                               
+                    </div>
+                </div>
+                <div class="tab-pane" id="auto">
+                    <button id="auto_move_btn" onclick="increase('auto_move')">
+                        Advance 
+                    </button> 
+                    <button id="auto_high_btn" onclick="increase('auto_high')">
+                        High Goal 
+                    </button>
+                    <button id="auto_low_btn" onclick="increase('auto_low')">
+                        Low Goal 
+                    </button>
+                </div>
+                <div class="tab-pane" id="tele">
+                    <div id="side">
+                        <button id="pass_start_btn" onclick="increase('pass_start')">
+                            Start Pass 
+                            <span id="pass_start_badge" class="badge">0</span>
+                        </button> 
+                        <button id="pass_end_btn" onclick="increase('pass_end')">
+                            Receive Pass 
+                            <span id="pass_end_badge" class="badge">0</span>
+                        </button>
+                        <button id="truss_pass_btn" onclick="increase('truss_pass')">
+                            Truss Pass 
+                            <span id="truss_pass_badge" class="badge">0</span>
+                        </button>
+                    </div>
+                    <div id="center">
+                        <button id="defense_btn" onclick="increase('defense')">
+                            Defense
+                            <span id="defense_badge" class="badge">0</span>
+                        </button>
+                        <button id="penalty_btn" onclick="increase('penalty')">
+                            Penalty
+                            <span id="penalty_badge" class="badge">0</span>
+                        </button>
+                    </div>
+                    <div id="side">
+                        <button id="high_goal_btn" onclick="increase('high_goal')">
+                            High Goal
+                            <span id="high_goal_badge" class="badge">0</span>
+                        </button>
+                        <button id="low_goal_btn" onclick="increase('low_goal')">
+                            Low Goal
+                            <span id="low_goal_badge" class="badge">0</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="lib/js/jquery-1.10.1.js"></script>
+        <script src="lib/js/vendor/bootstrap.min.js"></script>
+    </body>
+</html>
