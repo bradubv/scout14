@@ -31,16 +31,20 @@ cntsoftware.com
                 match_id: 0,
                 team_id: 0,
                 auto_move: 0,
-                auto_high: 0,
-                auto_low: 0,
+                auto_high_not: 0,
+                auto_high_hot: 0,
+                auto_low_not: 0,
+                auto_low_hot: 0,
                 pass_start: 0,
                 pass_end: 0,
-                truss: 0,
+                truss_pass: 0,
                 defense: 0,
                 penalty: 0,
                 low_goal: 0,
                 high_goal: 0
-            }
+            };
+
+            var log = new Array();
 
             function increase(statName) {
                 //TODO: it should be possible to derive the statName from the
@@ -63,6 +67,39 @@ cntsoftware.com
                     var button = document.getElementById(buttonName)
                     //badge.setAttribute("class","badge badge-success")
                     button.style.color = 'green'
+                }
+
+                log.push(statName);
+            }
+
+            function undo() {
+                if (log.length !== 0) {
+                    var last_action = log.pop();
+                    decrease(last_action);
+                }
+            }
+
+            function decrease(statName) {
+                //TODO: it should be possible to derive the statName from the
+                // name of the object that called this function (i.e. the button)
+                // statName = (buttonName - "_btn")
+                var badgeName = statName + "_badge"
+                var buttonName = statName + "_btn"
+
+                var oldStatVal = stats[statName]
+                var newStatVal = oldStatVal - 1;
+
+                var badge = document.getElementById(badgeName);
+                if (!(badge === null)) {
+                    //var oldScore = parseInt(badge.innerHTML)
+                    badge.innerHTML = newStatVal;
+                }
+
+                stats[statName] = newStatVal;
+
+                if (newStatVal == 0) {
+                    var button = document.getElementById(buttonName)
+                    button.style.color = 'black'
                 }
             }
 
@@ -89,16 +126,16 @@ cntsoftware.com
             function saveAndReset() {
                 stats.match_id = document.getElementById("match_id").value;
                 stats.team_id = document.getElementById("team_id").value;
-                save()
+                save();
                 for (var statName in stats) {
-                    if (typeof (stats[statName]) != "undefined") {
-                        resetField(statName)
+                    if (typeof (stats[statName]) !== "undefined") {
+                        resetField(statName);
                     }
                 }
-                stats.match_id = 0
-                stats.team_id = 0
-                document.getElementById("match_id").value = ''
-                document.getElementById("team_id").value = ''
+                stats.match_id = 0;
+                stats.team_id = 0;
+                document.getElementById("match_id").value = '';
+                document.getElementById("team_id").value = '';
             }
 
             function buildParams() {
@@ -178,6 +215,7 @@ cntsoftware.com
                 <li class="active"><a href="#match" data-toggle="tab">Match</a></li>
                 <li><a href="#auto" data-toggle="tab">Auto</a></li>
                 <li><a href="#tele" data-toggle="tab">Tele Op</a></li>
+                <li><a href="#save" data-toggle="tab">Save</a><li>
             </ul>
 
             <!-- Tab panes -->
@@ -187,63 +225,85 @@ cntsoftware.com
                         <input id="match_id" type="number" class="form-control" placeholder="Match #">
                         <input id="team_id" type="number" class="form-control" placeholder="Team #">
                     </div>
-                    <div id="center">
-                        <button id="save_btn" onclick="saveAndReset()">Save</button>
-                    </div>
-                    <div id="side">
-                        <div id='info' class="alert alert-danger"></div>                                               
-                    </div>
                 </div>
                 <div class="tab-pane" id="auto">
-                    <button id="auto_move_btn" onclick="increase('auto_move')">
-                        Advance 
-                    </button> 
-                    <button id="auto_high_btn" onclick="increase('auto_high')">
-                        High Goal 
-                    </button>
-                    <button id="auto_low_btn" onclick="increase('auto_low')">
-                        Low Goal 
-                    </button>
+                    <div id="side">
+                        <button type="button" id="auto_move_btn" class="btn btn-default btn-lg btn-block" onclick="increase('auto_move')">
+                            Advance 
+                        </button>
+                    </div>
+                    <div id="center">
+                        <button type="button" id="auto_high_not_btn" class="btn btn-default btn-lg btn-block" onclick="increase('auto_high_not')">
+                            High Goal<br>Cold 
+                        </button>
+                        <button type="button" id="auto_low_not_btn" class="btn btn-default btn-lg btn-block" onclick="increase('auto_low_not')">
+                            Low Goal<br>Cold
+                        </button>
+                    </div>
+                    <div id="side">
+                        <button type="button" id="auto_high_hot_btn" class="btn btn-default btn-lg btn-block" onclick="increase('auto_high_hot')">
+                            High Goal<br>Hot
+                        </button>
+                        <button type="button" id="auto_low_hot_btn" class="btn btn-default btn-lg btn-block" onclick="increase('auto_low_hot')">
+                            Low Goal<br>Hot
+                        </button>
+                        <button type="button" id="undo_auto" class="btn btn-danger btn-lg btn-block" onclick="undo()">
+                            Undo
+                        </button>
+                    </div>
                 </div>
                 <div class="tab-pane" id="tele">
                     <div id="side">
-                        <button id="pass_start_btn" onclick="increase('pass_start')">
-                            Start Pass 
+                        <button type="button" id="pass_start_btn" class="btn btn-default btn-lg btn-block" onclick="increase('pass_start')">
+                            Start<br>Pass 
                             <span id="pass_start_badge" class="badge">0</span>
                         </button> 
-                        <button id="pass_end_btn" onclick="increase('pass_end')">
-                            Receive Pass 
+                        <button type="button" id="pass_end_btn" class="btn btn-default btn-lg btn-block" onclick="increase('pass_end')">
+                            Receive<br>Pass 
                             <span id="pass_end_badge" class="badge">0</span>
                         </button>
-                        <button id="truss_pass_btn" onclick="increase('truss_pass')">
-                            Truss Pass 
+                        <button type="button" id="truss_pass_btn" class="btn btn-default btn-lg btn-block" onclick="increase('truss_pass')">
+                            Truss<br>Pass 
                             <span id="truss_pass_badge" class="badge">0</span>
                         </button>
                     </div>
                     <div id="center">
-                        <button id="defense_btn" onclick="increase('defense')">
+                        <button type="button" id="defense_btn" class="btn btn-default btn-lg btn-block" onclick="increase('defense')">
                             Defense
                             <span id="defense_badge" class="badge">0</span>
                         </button>
-                        <button id="penalty_btn" onclick="increase('penalty')">
+                        <button type="button" id="penalty_btn" class="btn btn-default btn-lg btn-block" onclick="increase('penalty')">
                             Penalty
                             <span id="penalty_badge" class="badge">0</span>
                         </button>
                     </div>
                     <div id="side">
-                        <button id="high_goal_btn" onclick="increase('high_goal')">
-                            High Goal
+                        <button type="button" id="high_goal_btn" class="btn btn-default btn-lg btn-block" onclick="increase('high_goal')">
+                            High<br>Goal
                             <span id="high_goal_badge" class="badge">0</span>
                         </button>
-                        <button id="low_goal_btn" onclick="increase('low_goal')">
-                            Low Goal
+                        <button type="button" id="low_goal_btn" class="btn btn-default btn-lg btn-block" onclick="increase('low_goal')">
+                            Low<br>Goal
                             <span id="low_goal_badge" class="badge">0</span>
                         </button>
+                        <button type="button" id="undo_tele" class="btn btn-danger btn-lg btn-block" onclick="undo()">
+                            Undo
+                        </button>
+                    </div>
+                </div>
+                <div class="tab-pane" id="save">
+                    <div id="center">
+                        <!--button id="save_btn" onclick="saveAndReset()">Save</button-->
+                        <button type="button" id="save_btn" class="btn btn-default btn-lg btn-block" onclick="saveAndReset()">
+                            Save
+                        </button>
+                        <hr>
+                        <div id="info" class="panel panel-default"></div>                                               
                     </div>
                 </div>
             </div>
         </div>
         <script src="lib/js/jquery-1.10.1.js"></script>
-        <script src="lib/js/vendor/bootstrap.min.js"></script>
+        <script src="lib/js/bootstrap.min.js"></script>
     </body>
 </html>

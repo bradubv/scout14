@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-See license.txt
+cntsoftware.com
 -->
 <html>
     <head>
