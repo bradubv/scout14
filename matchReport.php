@@ -50,29 +50,25 @@ See license.txt
                 die("Database access failed: " . mysql_error());
 
             $rows = mysql_num_rows($result);
-            
+
             $red1 = mysql_result($result, 0, 'red_team1');
             $blue1 = mysql_result($result, 0, 'blue_team1');
-
-            for ($j = 0; $j < $rows; ++$j) {
-                echo 'id: ' . mysql_result($result, $j, 'id') . '<br />';
-                echo 'name: ' . mysql_result($result, $j, 'name') . '<br />';
-                echo 'nick: ' . mysql_result($result, $j, 'nick') . '<br />';
-                echo 'school: ' . mysql_result($result, $j, 'school') . '<br />';
-                echo 'link: ' . mysql_result($result, $j, 'link') . '<br /><br />';
-            }
             ?>
+            
             <div id="side">
                 <input id="match_id" type="number" class="form-control" placeholder="Match #">
                 <input id="team_id" type="number" class="form-control" placeholder="Team #">
             </div>
             <div id="center">
-                <button id="red1_btn" onclick="followTeam('<?php echo $red1;?>')"><?php echo $red1;?></button>
+                <button id="red1_btn" onclick="followTeam('<?php echo $red1; ?>')"><?php echo $red1; ?></button>
             </div>
             <div id="side">
-                <button id="blue1_btn" onclick="followTeam('<?php echo $blue1;?>')"><?php echo $blue1;?></button>
+                <button id="blue1_btn" onclick="followTeam('<?php echo $blue1; ?>')"><?php echo $blue1; ?></button>
             </div>
 
         </div> <!-- container -->
+        <script src="lib/js/jquery-1.10.1.js"></script>
+        <script src="lib/js/bootstrap.min.js"></script>
+
     </body>
 </html>
